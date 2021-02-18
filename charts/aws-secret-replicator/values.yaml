@@ -1,0 +1,37 @@
+configMap:
+  create: true
+  name: aws-secret-replicator-config
+  data:
+    config: |
+      {
+        "secrets": [
+          {
+            "arn": "arn:aws:secretsmanager:us-west-2:123456789012:secret:example-cert",
+            "name": "example-cert",
+            "type": "kubernetes.io/tls"
+          }
+        ]
+      }
+
+serviceAccount:
+  create: true
+  name: aws-secret-replicator
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/example-role
+
+deployment:
+  create: true
+  name: aws-secret-replicator
+  image: ghcr.io/ecrousseau/aws-secret-replicator:latest
+
+role:
+  create: true
+  name: aws-secret-replicator
+
+roleBinding:
+  create: true
+  name: aws-secret-replicator
+
+global:
+  labels:
+    app: aws-secret-replicator

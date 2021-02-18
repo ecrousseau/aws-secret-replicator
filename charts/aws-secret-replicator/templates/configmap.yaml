@@ -1,0 +1,10 @@
+{{- if .Values.configMap.create }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+{{ toYaml .Values.global.labels | indent 4 }}
+  name: {{ .Values.configMap.name }}
+data:
+{{ toYaml .Values.configMap.data | indent 2 }}
+{{- end }}

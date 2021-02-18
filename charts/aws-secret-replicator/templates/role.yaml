@@ -1,0 +1,15 @@
+{{- if .Values.role.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+{{ toYaml .Values.global.labels | indent 4 }}
+  name: {{ .Values.role.name }}
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get","create","update"]
+{{- end }}

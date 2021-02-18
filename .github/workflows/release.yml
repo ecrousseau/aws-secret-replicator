@@ -1,0 +1,45 @@
+name: release
+
+on:
+  release:
+    types: [published] 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2.3.1
+      - name: Build 🔧
+        run: |
+          docker build . -t ghcr.io/ecrousseau/aws-secret-replicator:${{ github.event.release.tag_name }}
+      - name: Push 🚀
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        run: |
+          echo $GHCR_TOKEN | docker login --username ecrousseau --password-stdin ghcr.io
+          docker push ghcr.io/ecrousseau/aws-secret-replicator:${{ github.event.release.tag_name }}
+      - name: Package Helm Chart
+        run: |
+          curl -sS -L -o yq https://github.com/mikefarah/yq/releases/download/v4.5.0/yq_linux_amd64
+          chmod +x yq
+          ./yq eval '.deployment.image = "ghcr.io/ecrousseau/aws-secret-replicator:${{ github.event.release.tag_name }}"' charts/aws-secret-replicator/values.yaml --inplace
+          helm package charts/aws-secret-replicator --app-version ${{ github.event.release.tag_name }} --version ${{ github.event.release.tag_name }}
+      - name: Upload Helm Chart
+        id: upload
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }} # GHCR token has 'write packages' permission
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: aws-secret-replicator-${{ github.event.release.tag_name }}.tgz
+          asset_name: aws-secret-replicator-${{ github.event.release.tag_name }}.tgz
+          asset_content_type: application/x-gzip
+      - name: Update Release Description
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        run: |
+          curl -X PATCH -H "Accept: application/vnd.github.v3+json" \
+            -u ecrousseau:$GHCR_TOKEN \
+            ${{ github.event.release.url }} \
+            -d '{"body":"Helm chart: ${{ steps.upload.outputs.browser_download_url }}"}'

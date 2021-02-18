@@ -1,0 +1,29 @@
+{{- if .Values.deployment.create }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+{{ toYaml .Values.global.labels | indent 4 }}
+  name: {{ .Values.deployment.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+{{ toYaml .Values.global.labels | indent 6 }}
+  template:
+    metadata:
+      labels:
+{{ toYaml .Values.global.labels | indent 8 }}
+    spec:
+      serviceAccount: {{ .Values.serviceAccount.name }}
+      containers:
+      - name: {{ .Values.deployment.name }}
+        image: {{ .Values.deployment.image }}
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONFIGMAP_NAME
+          value: {{ .Values.configMap.name }}
+{{- end }}
