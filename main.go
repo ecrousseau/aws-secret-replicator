@@ -37,7 +37,6 @@ func OnTick() {
             continue
         }
         klog.Infof("Retrieved value for AWS secret %v", secret.ARN)
-        klog.Infof("DEBUG value: %#v", value)
         err = CreateOrUpdateSecret(secret, value)
         if err != nil {
             klog.Errorf("Error while creating kubernetes secret %v: %v", secret.Name, err)
